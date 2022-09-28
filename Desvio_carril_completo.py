@@ -51,8 +51,7 @@ def undistort(img, cal_dir='camera_cal/cal_pickle.p'):
     
     return dst
 
-    undistort_img()
-
+undistort_img()
 
 
 def pipeline(img, s_thresh=(100, 255), sx_thresh=(15, 255)):
@@ -118,6 +117,9 @@ def get_hist(img):
     hist = np.sum(img[img.shape[0]//2:,:], axis=0)
     return hist
 
+
+left_a, left_b, left_c = [],[],[]
+right_a, right_b, right_c = [],[],[]
 
 left_a, left_b, left_c = [],[],[]
 right_a, right_b, right_c = [],[],[]
@@ -283,12 +285,25 @@ def vid_pipeline(img):
     return img
 
 right_curves, left_curves = [],[]
-from moviepy.editor import VideoFileClip
-import cv2
-#from IPython import get_ipython
-myclip = VideoFileClip('./carril2.mp4')#.subclip(40,43)
-output_vid = 'output50.mp4'
-clip = myclip.fl_image(vid_pipeline)
-clip.write_videofile(output_vid, audio=False)
 
-#get_ipython().run_line_magic('time', 'clip.write_videofile(output_vid, audio=False)')s
+cap = cv2.VideoCapture('./carril2.mp4')
+
+while cap.isOpened():
+    img = cv2.imread('test_images/test9.png')
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    dst = pipeline(img)
+    dst = perspective_warp(dst, dst_size=(1280,720))
+
+    out_img, curves, lanes, ploty = sliding_window(dst)
+
+    curverad=get_curve(img, curves[0],curves[1])
+    img_ = draw_lanes(img, curves[0], curves[1])
+     
+    cv2.imshow("Salida", img_)
+
+    key = cv2.waitKey(30)
+    if key == ord('q'):
+        cap.release()
+        cv2.destroyAllWindows()
+        break
